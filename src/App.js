@@ -4,6 +4,8 @@ import RetroTerminalChat from "./components/RetroTerminalChat";
 import Navbar from "./components/Navbar";
 import TopMoviesPage from "./components/TopMoviesPage";
 import MovieDetailPage from "./components/MovieDetailPage";
+import AdminPanel from "./components/AdminPanel";
+import BlogPage from "./components/BlogPage";
 import "./App.css";
 
 class ErrorBoundary extends React.Component {
@@ -34,13 +36,17 @@ function App() {
     <div className="App crt-effect min-h-screen bg-black">
       <div className="scan-lines"></div>
       <div className="container mx-auto p-4">
-        <BrowserRouter>
+        <BrowserRouter
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
           <ErrorBoundary>
             <Navbar />
             <Routes>
               <Route path="/" element={<RetroTerminalChat />} />
               <Route path="/top-movies" element={<TopMoviesPage />} />
               <Route path="/movie/:id" element={<MovieDetailPage />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/blog/*" element={<BlogPage />} />
             </Routes>
           </ErrorBoundary>
         </BrowserRouter>

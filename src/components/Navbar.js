@@ -15,6 +15,20 @@ const Navbar = () => {
         </Link>
 
         <Link
+          to="/blog"
+          className="px-4 py-2 border border-green-500 text-green-500 hover:bg-green-500 hover:text-black transition-colors font-mono"
+        >
+          TERMINAL LOGS
+        </Link>
+
+        <Link
+          to="/admin"
+          className="px-4 py-2 border border-green-500 text-green-500 hover:bg-green-500 hover:text-black transition-colors font-mono"
+        >
+          ADMIN TERMINAL
+        </Link>
+
+        <Link
           to="/top-movies"
           className="px-4 py-2 border border-green-500 text-green-500 hover:bg-green-500 hover:text-black transition-colors font-mono"
         >
