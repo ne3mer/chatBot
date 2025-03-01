@@ -219,7 +219,7 @@ const RetroTerminalChat = () => {
         onSubmit={handleSubmit}
         className="flex border border-green-500 bg-black"
       >
-        <div className="px-2 py-1 text-green-500">></div>
+        <div className="px-2 py-1 text-green-500"></div>
         <input
           ref={inputRef}
           type="text"
