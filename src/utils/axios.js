@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const baseURL =
+  process.env.NODE_ENV === "production"
+    ? "https://retroterminal-api.onrender.com"
+    : "http://localhost:5001";
+
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5001",
+  baseURL,
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",
