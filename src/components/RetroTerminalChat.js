@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
+import AnonymousMask from "./AnonymousMask";
+import HackerTerminalUI from "./HackerTerminalUI";
+import MatrixCodeRain from "./MatrixCodeRain";
 
 const RetroTerminalChat = () => {
   const [messages, setMessages] = useState([
@@ -8,6 +11,7 @@ const RetroTerminalChat = () => {
   ]);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
+  const [isTalking, setIsTalking] = useState(false);
   const [cursorVisible, setCursorVisible] = useState(true);
   const [systemStatus, setSystemStatus] = useState({
     cpu: "OPERATIONAL",
@@ -16,8 +20,12 @@ const RetroTerminalChat = () => {
     users: 1,
   });
   const [commandHistory, setCommandHistory] = useState([]);
+  const [glitchText, setGlitchText] = useState("");
+  const [showGlitch, setShowGlitch] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const terminalRef = useRef(null);
+  const sessionId = useRef(`session-${Date.now()}`); // Unique session ID
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
@@ -37,7 +45,43 @@ const RetroTerminalChat = () => {
     inputRef.current?.focus();
   }, [messages, isThinking]);
 
-  // Call DeepSeek API for AI responses
+  // Random glitch effect
+  useEffect(() => {
+    const glitchInterval = setInterval(() => {
+      if (Math.random() > 0.95) {
+        const glitchChars = "!@#$%^&*()_+-=[]{}|;:,.<>/?\\`~";
+        let result = "";
+        for (let i = 0; i < 10; i++) {
+          result += glitchChars[Math.floor(Math.random() * glitchChars.length)];
+        }
+        setGlitchText(result);
+        setShowGlitch(true);
+
+        setTimeout(() => {
+          setShowGlitch(false);
+        }, 150);
+      }
+    }, 1000);
+
+    return () => clearInterval(glitchInterval);
+  }, []);
+
+  // Add screen flicker effect
+  useEffect(() => {
+    const flicker = () => {
+      if (Math.random() > 0.97) {
+        terminalRef.current.classList.add("screen-flicker");
+        setTimeout(() => {
+          terminalRef.current?.classList.remove("screen-flicker");
+        }, 150);
+      }
+    };
+
+    const flickerInterval = setInterval(flicker, 2000);
+    return () => clearInterval(flickerInterval);
+  }, []);
+
+  // Call API for AI responses
   const fetchAIResponse = async (userMessage) => {
     try {
       // Handle special commands locally for immediate response
@@ -65,7 +109,7 @@ const RetroTerminalChat = () => {
             network: Math.random() > 0.3 ? "CONNECTED" : "INTERMITTENT",
           }));
         }, 1000);
-        return "ALL SYSTEMS OPERATIONAL. DEEPSEEK AI CORE ONLINE. CPU LOAD: 42%";
+        return "ALL SYSTEMS OPERATIONAL. AI CORE ONLINE. CPU LOAD: 42%";
       }
 
       // Special command: TIME
@@ -89,7 +133,10 @@ const RetroTerminalChat = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message: userMessage }),
+          body: JSON.stringify({
+            message: userMessage,
+            sessionId: sessionId.current,
+          }),
         });
 
         if (!response.ok) {
@@ -125,6 +172,9 @@ const RetroTerminalChat = () => {
 
   // Simulate typing animation for AI responses
   const simulateTypingAnimation = (response) => {
+    // Set talking to true when AI starts responding
+    setIsTalking(true);
+
     let displayedResponse = "";
     const typingInterval = setInterval(() => {
       if (displayedResponse.length < response.length) {
@@ -136,6 +186,11 @@ const RetroTerminalChat = () => {
       } else {
         clearInterval(typingInterval);
         setIsThinking(false);
+
+        // Set talking to false when AI finishes responding
+        setTimeout(() => {
+          setIsTalking(false);
+        }, 1000); // Keep talking for a short while after response completes
       }
     }, 30); // 30ms per character
   };
@@ -165,7 +220,7 @@ const RetroTerminalChat = () => {
     // Add a small delay to simulate initial processing
     setTimeout(async () => {
       try {
-        // Fetch response from Claude API
+        // Fetch response from API
         const aiResponse = await fetchAIResponse(userInput);
         simulateTypingAnimation(aiResponse);
       } catch (error) {
@@ -190,15 +245,36 @@ const RetroTerminalChat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-green-500 font-mono p-4 flex flex-col">
-      <div className="mb-4 border-b border-green-500 pb-2">
+    <div
+      ref={terminalRef}
+      className="min-h-screen bg-black text-green-500 font-mono p-4 flex flex-col relative"
+    >
+      {/* Matrix Code Rain in background */}
+      <div
+        className="absolute top-0 left-0 w-full h-full"
+        style={{ zIndex: 0, opacity: 0.07, pointerEvents: "none" }}
+      >
+        <MatrixCodeRain height="100%" />
+      </div>
+
+      {/* Glitch overlay */}
+      {showGlitch && (
+        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-4xl opacity-30 z-10">
+          {glitchText}
+        </div>
+      )}
+
+      <div className="mb-4 border-b border-green-500 pb-2 z-10 relative">
         <h1 className="text-xl text-center">
           TERMINALX-9000 ARTIFICIAL INTELLIGENCE SYSTEM
         </h1>
         <p className="text-center">© 1983 CYBERDYNE SYSTEMS</p>
+        <div className="text-center">
+          <AnonymousMask isTalking={isTalking} />
+        </div>
       </div>
 
-      <div className="flex-1 overflow-auto mb-4 border border-green-500 p-4 bg-black">
+      <div className="flex-1 overflow-auto mb-4 border border-green-500 p-4 bg-black bg-opacity-90 z-10 relative">
         <div className="space-y-2">
           {messages.map((message, index) => (
             <div
@@ -218,9 +294,9 @@ const RetroTerminalChat = () => {
 
       <form
         onSubmit={handleSubmit}
-        className="flex border border-green-500 bg-black"
+        className="flex border border-green-500 bg-black z-10 relative"
       >
-        <div className="px-2 py-1 text-green-500">></div>
+        <div className="px-2 py-1 text-green-500"></div>
         <input
           ref={inputRef}
           type="text"
@@ -237,32 +313,8 @@ const RetroTerminalChat = () => {
         </div>
       </form>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <div className="border border-green-500 p-2">
-          <div className="text-center mb-1">SYSTEM STATUS</div>
-          <div className="text-xs">
-            <div>CPU: {systemStatus.cpu}</div>
-            <div>MEMORY: {systemStatus.memory}</div>
-            <div>NETWORK: {systemStatus.network}</div>
-            <div>USERS: {systemStatus.users}</div>
-            <div>HASH: {getHashCode()}</div>
-          </div>
-        </div>
-        <div className="border border-green-500 p-2">
-          <div className="text-center mb-1">COMMAND HISTORY</div>
-          <div className="text-xs">
-            {commandHistory.length > 0 ? (
-              commandHistory.map((cmd, index) => (
-                <div key={index}>
-                  {cmd.length > 20 ? cmd.substring(0, 20) + "..." : cmd}
-                </div>
-              ))
-            ) : (
-              <div>NO PREVIOUS COMMANDS</div>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Hacker Terminal UI elements */}
+      <HackerTerminalUI />
     </div>
   );
 };
